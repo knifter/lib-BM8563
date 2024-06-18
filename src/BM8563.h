@@ -1,35 +1,43 @@
-#ifndef __DEVTEMP_H
-#define __DEVTEMP_H
+#ifndef __BM8563_H
+#define __BM8563_H
 
-#include <Arduino.h>
 #include <TwoWireDevice.h>
-// #include <SPIDevice.h>
 
-// CONFIG
-#define DEVTEMP_ADDRESS_DEFAULT      (0x44)
-#define DEVTEMP_ADDRESS_ALT	       (0x45)
-// #define DEVTEMP_SPI_SPEED			  4E6
+#define BM8563_ADDRESS_DEFAULT      (0x51)
 
-class DEVTEMP : public TwoWireDevice
-// class DEVTEMP : public SPIDevice
+class BM8563 : protected TwoWireDevice 
 {
 	public:
 		//constructors
-		DEVTEMP(const uint8_t addr = DEVTEMP_ADDRESS_DEFAULT) : TwoWireDevice(addr) {};
-   		DEVTEMP(TwoWire& wire, const uint8_t addr = DEVTEMP_ADDRESS_DEFAULT)  : TwoWireDevice(wire, addr) {};
-        // DEVTEMP(SPIClass& spi, const uint8_t pin_cs)
-        //     : SPIDevice(spi, pin_cs, DEVTEMP_SPI_SPEED, SPI_MSBFIRST, SPI_MODE1) {};
-        ~DEVTEMP() {};
+		BM8563(TwoWire& wire)  : TwoWireDevice(wire, BM8563_ADDRESS_DEFAULT) {};
+		BM8563() : TwoWireDevice(BM8563_ADDRESS_DEFAULT) {};
+		~BM8563() {};
 
-		bool begin(uint8_t address = 0);
-		// void reset();
-	
-    protected:
+		typedef struct
+		{
+			int8_t hour;
+			int8_t minute;
+			int8_t seconds;
+		} rtctime_t;
 
-	private:
-        // Device instance is non-copyable
-		DEVTEMP(const DEVTEMP&);
-		DEVTEMP& operator=(const DEVTEMP&);
+		typedef struct  
+		{
+			int8_t  day;
+			int8_t  weekday;
+			int8_t  month;
+			int16_t year;
+		} rtcdate_t;
+
+		rtctime_t time;
+		rtcdate_t date;
+
+		bool begin();
+		void readDateTime();
+		void readTime();
+		void readDate();
+		void writeDateTime();
+		void writeTime();
+		void writeDate();
 };
 
-#endif // __DEVTEMP_H
+#endif // __BM8563_H
