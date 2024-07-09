@@ -13,31 +13,16 @@ class BM8563 : protected TwoWireDevice
 		BM8563() : TwoWireDevice(BM8563_ADDRESS_DEFAULT) {};
 		~BM8563() {};
 
-		typedef struct
-		{
-			int8_t hour;
-			int8_t minute;
-			int8_t seconds;
-		} rtctime_t;
-
-		typedef struct  
-		{
-			int8_t  day;
-			int8_t  weekday;
-			int8_t  month;
-			int16_t year;
-		} rtcdate_t;
-
-		rtctime_t time;
-		rtcdate_t date;
-
 		bool begin();
-		void readDateTime();
-		void readTime();
-		void readDate();
-		void writeDateTime();
-		void writeTime();
-		void writeDate();
+
+		struct tm* dateTime(); // Caching version
+		struct tm* readDateTime();
+		bool readDateTime(struct tm* target);
+		bool writeDateTime(const struct tm* datetime);
+	
+	private:
+		time_t _lastread;
+		struct tm _dt;
 };
 
 #endif // __BM8563_H

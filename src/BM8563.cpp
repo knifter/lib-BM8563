@@ -1,6 +1,8 @@
 #include "BM8563.h"
 #include "BM8563_regs.h"
 
+#include <time.h>
+
 #include "tools-log.h"
 
 bool BM8563::begin()
@@ -16,8 +18,7 @@ bool BM8563::begin()
 	writereg8(REG_CLKOUTCTL,  0x00);
 	writereg8(REG_TIMERCTL, TIMERCTL_MIN); // Saves power if timer not used
 
-	memset(&time, 0, sizeof(time));
-	memset(&date, 0, sizeof(date));
+	_lastread = 0;
 
 	return last_error() == 0;
 };
@@ -32,76 +33,55 @@ uint8_t uint2bcd(const uint8_t in)
 	return ((in / 10) << 4) | (in % 10);
 };
 
-void BM8563::readDateTime() 
+struct tm* BM8563::dateTime()
+{
+	if(millis() - _lastread > 999)
+		readDateTime(&_dt);
+	return &_dt;
+};
+
+struct tm* BM8563::readDateTime() 
+{
+	if(millis() - _lastread > 999)
+		readDateTime(&_dt);
+	return &_dt;
+};
+
+bool BM8563::readDateTime(struct tm* target)
 {
 	uint8_t buf[7];
 	readreg(REG_SECONDS, buf, 7);
 
-	time.seconds = bcd2uint(buf[0]);
-	time.minute  = bcd2uint(buf[1]);
-	time.hour	 = bcd2uint(buf[2]);
-	date.day 	 = bcd2uint(buf[3]);
-	date.weekday = bcd2uint(buf[4]);
-	date.month	 = bcd2uint(buf[5]);
-	date.year	 = bcd2uint(buf[6]) + (buf[5] & MONTH_2K) ? 2000 : 0;
+	target->tm_sec 		= bcd2uint(buf[0]);
+	target->tm_min  	= bcd2uint(buf[1]);
+	target->tm_hour		= bcd2uint(buf[2]);
+	target->tm_mday 	= bcd2uint(buf[3]);
+	target->tm_wday 	= bcd2uint(buf[4]);
+	target->tm_mon		= bcd2uint(buf[5]);
+	target->tm_year		= bcd2uint(buf[6]) + (buf[5] & MONTH_2K) ? 2000 : 1900;
 
-	return;
+	// FIXME?
+	target->tm_isdst = false;
+	target->tm_yday = 0;
+
+	return last_error() == 0;
 };
 
-void BM8563::readTime() 
-{
-	uint8_t buf[3];
-	readreg(REG_SECONDS, buf, 3);
-	time.seconds = bcd2uint(buf[0]);
-	time.minute  = bcd2uint(buf[1]);
-	time.hour	 = bcd2uint(buf[2]);
-
-	return;
-};
-
-void BM8563::readDate() 
+bool BM8563::writeDateTime(const struct tm* dt)
 {
 	uint8_t buf[7];
-	readreg(REG_DAYS, buf, 4);
-	date.day 	 = bcd2uint(buf[3]);
-	date.weekday = bcd2uint(buf[4]);
-	date.month	 = bcd2uint(buf[5]);
-	date.year	 = bcd2uint(buf[6]) + (buf[5] & MONTH_2K) ? 2000 : 1900;
-
-	return;
-};
-
-void BM8563::writeDateTime()
-{
-	uint8_t buf[7];
-	buf[0] = uint2bcd(time.seconds);
-	buf[1] = uint2bcd(time.minute);
-	buf[2] = uint2bcd(time.hour);
-	buf[3] = uint2bcd(date.day);
-	buf[4] = uint2bcd(date.weekday);
-	buf[5] = uint2bcd(date.month) | ((date.year > 1999) ? MONTH_2K : 0x00);
-	buf[7] = uint2bcd(date.year) % 100;
+	buf[0] = uint2bcd(dt->tm_sec);
+	buf[1] = uint2bcd(dt->tm_min);
+	buf[2] = uint2bcd(dt->tm_hour);
+	buf[3] = uint2bcd(dt->tm_mday);
+	buf[4] = uint2bcd(dt->tm_wday);
+	buf[5] = uint2bcd(dt->tm_mon) | ((dt->tm_year > 1999) ? MONTH_2K : 0x00);
+	buf[7] = uint2bcd(dt->tm_year) % 100;
 
 	writereg(REG_SECONDS, buf, 7);
-};
 
-void BM8563::writeTime()
-{
-	uint8_t buf[3];
-	buf[0] = uint2bcd(time.seconds);
-	buf[1] = uint2bcd(time.minute);
-	buf[2] = uint2bcd(time.hour);
+	// invalidate cache
+	_lastread = 0;
 
-	writereg(REG_SECONDS, buf, 3);
-};
-
-void BM8563::writeDateTime()
-{
-	uint8_t buf[4];
-	buf[0] = uint2bcd(date.day);
-	buf[1] = uint2bcd(date.weekday);
-	buf[2] = uint2bcd(date.month) | ((date.year > 1999) ? MONTH_2K : 0x00);
-	buf[3] = uint2bcd(date.year) % 100;
-
-	writereg(REG_SECONDS, buf, 4);
+	return last_error() == 0;
 };
