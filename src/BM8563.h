@@ -15,14 +15,14 @@ class BM8563 : protected TwoWireDevice
 
 		bool begin();
 
-		struct tm* dateTime(); // Caching version
-		struct tm* readDateTime();
+		// struct tm* dateTime(); // Caching version
+		// struct tm* readDateTime();
 		bool readDateTime(struct tm* target);
 		bool writeDateTime(const struct tm* datetime);
 	
-	private:
-		time_t _lastread;
-		struct tm _dt;
+	// private:
+		// time_t _lastread;
+		// struct tm _dt;
 };
 
 #endif // __BM8563_H

@@ -18,9 +18,13 @@ bool BM8563::begin()
 	writereg8(REG_CLKOUTCTL,  0x00);
 	writereg8(REG_TIMERCTL, TIMERCTL_MIN); // Saves power if timer not used
 
-	_lastread = 0;
-
-	return last_error() == 0;
+	// _lastread = 0;
+	if(last_error())
+	{
+		WARNING("BM8563.begin() failed: %s", last_error_text());
+		return false;
+	};
+	return true;
 };
 
 uint8_t bcd2uint(const uint8_t in)
@@ -33,19 +37,19 @@ uint8_t uint2bcd(const uint8_t in)
 	return ((in / 10) << 4) | (in % 10);
 };
 
-struct tm* BM8563::dateTime()
-{
-	if(millis() - _lastread > 999)
-		readDateTime(&_dt);
-	return &_dt;
-};
+// struct tm* BM8563::dateTime()
+// {
+// 	if(millis() - _lastread > 999)
+// 		readDateTime(&_dt);
+// 	return &_dt;
+// };
 
-struct tm* BM8563::readDateTime() 
-{
-	if(millis() - _lastread > 999)
-		readDateTime(&_dt);
-	return &_dt;
-};
+// struct tm* BM8563::readDateTime() 
+// {
+// 	if(millis() - _lastread > 999)
+// 		readDateTime(&_dt);
+// 	return &_dt;
+// };
 
 bool BM8563::readDateTime(struct tm* target)
 {
@@ -76,12 +80,12 @@ bool BM8563::writeDateTime(const struct tm* dt)
 	buf[3] = uint2bcd(dt->tm_mday);
 	buf[4] = uint2bcd(dt->tm_wday);
 	buf[5] = uint2bcd(dt->tm_mon) | ((dt->tm_year > 1999) ? MONTH_2K : 0x00);
-	buf[7] = uint2bcd(dt->tm_year) % 100;
+	buf[6] = uint2bcd(dt->tm_year) % 100;
 
 	writereg(REG_SECONDS, buf, 7);
 
-	// invalidate cache
-	_lastread = 0;
+	// // invalidate cache
+	// _lastread = 0;
 
 	return last_error() == 0;
 };
