@@ -56,13 +56,13 @@ bool BM8563::readDateTime(struct tm* target)
 	uint8_t buf[7];
 	readreg(REG_SECONDS, buf, 7);
 
-	target->tm_sec 		= bcd2uint(buf[0]);
-	target->tm_min  	= bcd2uint(buf[1]);
-	target->tm_hour		= bcd2uint(buf[2]);
-	target->tm_mday 	= bcd2uint(buf[3]);
-	target->tm_wday 	= bcd2uint(buf[4]);
-	target->tm_mon		= bcd2uint(buf[5]);
-	target->tm_year		= bcd2uint(buf[6]) + (buf[5] & MONTH_2K) ? 2000 : 1900;
+	target->tm_sec 		= bcd2uint(buf[0] & 0x7F);
+	target->tm_min  	= bcd2uint(buf[1] & 0x7F);
+	target->tm_hour		= bcd2uint(buf[2] & 0x3F);
+	target->tm_mday 	= bcd2uint(buf[3] & 0x3F);
+	target->tm_wday 	= bcd2uint(buf[4] & 0x07);
+	target->tm_mon		= bcd2uint(buf[5] & 0x1F);
+	target->tm_year		= bcd2uint(buf[6]) + ((buf[5] & MONTH_2K) ? 2000 : 1900);
 
 	// FIXME?
 	target->tm_isdst = false;
@@ -80,7 +80,7 @@ bool BM8563::writeDateTime(const struct tm* dt)
 	buf[3] = uint2bcd(dt->tm_mday);
 	buf[4] = uint2bcd(dt->tm_wday);
 	buf[5] = uint2bcd(dt->tm_mon) | ((dt->tm_year > 1999) ? MONTH_2K : 0x00);
-	buf[6] = uint2bcd(dt->tm_year) % 100;
+	buf[6] = uint2bcd(dt->tm_year % 100);
 
 	writereg(REG_SECONDS, buf, 7);
 
