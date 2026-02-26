@@ -71,16 +71,22 @@ bool BM8563::readDateTime(struct tm* target)
 	return last_error() == 0;
 };
 
-bool BM8563::writeDateTime(const struct tm* dt)
+bool BM8563::writeDateTime(const struct timeval& tv)
+{
+	struct tm *tmp = localtime(&(tv.tv_sec));
+	return writeDateTime(*tmp);
+};
+
+bool BM8563::writeDateTime(const struct tm& dt)
 {
 	uint8_t buf[7];
-	buf[0] = uint2bcd(dt->tm_sec);
-	buf[1] = uint2bcd(dt->tm_min);
-	buf[2] = uint2bcd(dt->tm_hour);
-	buf[3] = uint2bcd(dt->tm_mday);
-	buf[4] = uint2bcd(dt->tm_wday);
-	buf[5] = uint2bcd(dt->tm_mon) | ((dt->tm_year > 1999) ? MONTH_2K : 0x00);
-	buf[6] = uint2bcd(dt->tm_year % 100);
+	buf[0] = uint2bcd(dt.tm_sec);
+	buf[1] = uint2bcd(dt.tm_min);
+	buf[2] = uint2bcd(dt.tm_hour);
+	buf[3] = uint2bcd(dt.tm_mday);
+	buf[4] = uint2bcd(dt.tm_wday);
+	buf[5] = uint2bcd(dt.tm_mon) | ((dt.tm_year > 1999) ? MONTH_2K : 0x00);
+	buf[6] = uint2bcd(dt.tm_year % 100);
 
 	writereg(REG_SECONDS, buf, 7);
 

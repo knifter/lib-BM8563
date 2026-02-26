@@ -18,7 +18,8 @@ class BM8563 : protected TwoWireDevice
 		// struct tm* dateTime(); // Caching version
 		// struct tm* readDateTime();
 		bool readDateTime(struct tm* target);
-		bool writeDateTime(const struct tm* datetime);
+		bool writeDateTime(const struct timeval& tv);
+		bool writeDateTime(const struct tm& datetime);
 	
 	// private:
 		// time_t _lastread;
