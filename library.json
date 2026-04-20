@@ -1,0 +1,32 @@
+{
+  "name": "lib-BM8563",
+  "version": "1.1.0",
+  "description": "Arduino driver for the BM8563 I2C real-time clock (RTC). Wraps lib-TwoWireDevice to provide simple read/write of date/time using standard struct tm and timeval.",
+  "keywords": ["rtc", "bm8563", "i2c", "real-time clock", "esp32", "arduino"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/knifter/lib-BM8563"
+  },
+  "authors": {
+    "name": "Tijs van Roon",
+    "url": "https://github.com/knifter",
+    "maintainer": true
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/knifter/lib-BM8563",
+  "frameworks": "arduino",
+  "platforms": "*",
+  "dependencies": [
+    {
+      "name": "lib-TwoWireDevice",
+      "version": "https://github.com/knifter/lib-TwoWireDevice"
+    },
+    {
+      "name": "lib-tools",
+      "version": "https://github.com/knifter/lib-tools"
+    }
+  ],
+  "build": {
+    "srcDir": "src"
+  }
+}
